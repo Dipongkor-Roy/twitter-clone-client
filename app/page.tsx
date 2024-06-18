@@ -1,6 +1,12 @@
+"use client";
 import { FaBell, FaMessage, FaUser, FaXTwitter } from "react-icons/fa6";
 import { FaHome, FaSearch } from "react-icons/fa";
 import FeedCard from "@/components/FeedCard";
+import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
+import { useCallback } from "react";
+import toast from "react-hot-toast";
+import { graphqlClient } from "@/clients/api";
+import { verifyUserGoogleTokenQuery } from "@/graphql/query/user";
 interface SidebarMenuBtn {
   tittle: string;
   icon: React.ReactNode;
@@ -28,6 +34,21 @@ export default function Home() {
       icon: <FaUser />,
     },
   ];
+  const handleLoginWithGoogle = useCallback(
+    async (cred: CredentialResponse) => {
+      const googleToken = cred.credential;
+      if (!googleToken) return toast.error(`Google Token Not Found`);
+
+      const { verifyGoogleToken } = await graphqlClient.request(
+        verifyUserGoogleTokenQuery,
+        { token: googleToken }
+      );
+
+      toast.success("verified Success");
+      console.log(verifyGoogleToken);
+    },
+    []
+  );
   return (
     <main className="text-center">
       <div className="h-screen w-screen grid grid-cols-12 gap-4 px-12 ">
@@ -69,7 +90,12 @@ export default function Home() {
             <FeedCard />
           </div>
         </div>
-        <div className="col-span-3">section-3</div>
+        <div className="col-span-3 p-5">
+          <div className="p-5 bg-slate-800 rounded-lg">
+            <h3 className="text-sm mb-2">New To Twitter?</h3>
+            <GoogleLogin onSuccess={handleLoginWithGoogle} />
+          </div>
+        </div>
       </div>
     </main>
   );
